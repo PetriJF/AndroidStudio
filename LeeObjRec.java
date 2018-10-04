@@ -18,9 +18,8 @@ import java.nio.ByteBuffer;
 public class objectRecognition extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
-    int minD = 30000 / 4, objS, imageWidth, imageHeight, left = 0, center = 1, right = 2; //minD = minimal difference between 2 colors for comparision
+    int minD = 30000 / 4, objS, imageWidth, imageHeight, left = 0, center = 1, right = 2, scale = 4; //minD = minimal difference between 2 colors for comparision
     boolean[][] cube_color, lee_matrix;
-    boolean RECOGNISED = false;
     int[] Loc;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -35,9 +34,9 @@ public class objectRecognition extends LinearOpMode {
 
 
         waitForStart();
+        runtime.reset();
         while (opModeIsActive()) {
 
-            while (!RECOGNISED) {
                 VuforiaLocalizer.CloseableFrame frame = locale.getFrameQueue().take(); //takes the frame at the head of the queue
                 Image img = null;
                 long numImages = frame.getNumImages();
@@ -73,10 +72,12 @@ public class objectRecognition extends LinearOpMode {
                 pixel = GetRGB(imageWidth - 1, imageHeight  - 1, pixelArray, imageWidth);///stanga jos
                 ShowRGB(pixel);*/
 
-                    cube_color = new boolean[imageWidth / 2][imageHeight / 2];
+                    cube_color = new boolean[imageWidth / scale][imageHeight / scale];
+                    int scale2 = scale * scale;
 
-                    for (int y = 0; y < imageHeight; y += 2)
-                        for (int x = 0; x < imageWidth; x += 2) {
+                    for (int y = 0; y < imageHeight; y += scale)
+                        for (int x = 0; x < imageWidth; x += scale)
+                        {
 
 
                             pixel = GetRGB(x, y, pixelArray);
@@ -86,22 +87,23 @@ public class objectRecognition extends LinearOpMode {
                             int sBlue = 0;
 
 
-                            for (int j = y; j <= y + 1; j++)
-                                for (int i = x; i <= x + 1; i++) {
+                            for (int j = y; j < y + scale; ++j)
+                                for (int i = x; i < x + scale; ++i)
+                                {
                                     pixel = GetRGB(i, j, pixelArray);
                                     sRed += pixel[0];
                                     sGreen += pixel[1];
                                     sBlue += pixel[2];
-
                                 }
-                            int d = Distance(sRed / 4, sGreen / 4, sBlue / 4, 0, 127, 127);
+
+                            int d = Distance(sRed / scale2, sGreen / scale2, sBlue / scale2, 0, 127, 127);
                             if (d < minD)
-                                cube_color[x / 2][y / 2] = true;
-                            else cube_color[x / 2][y / 2] = false;
+                                cube_color[x / scale][y / scale] = true;
+                            else cube_color[x / scale][y / scale] = false;
                         }
 
-                    imageWidth /= 2;
-                    imageHeight /= 2;
+                    imageWidth /= scale;
+                    imageHeight /= scale;
 
                     int xCube = 0, yCube = 0, sMax = 0;
                     lee_matrix = new boolean[imageWidth][imageHeight];
@@ -136,13 +138,13 @@ public class objectRecognition extends LinearOpMode {
                     else if (Loc[right] == locMax) S = "RIGHT";
 
                     telemetry.addData("LOCATION", S);
-
+                    telemetry.addData("Cube X", xCube * scale);
+                    telemetry.addData("Cube Y", yCube * scale);
+                    telemetry.addData("Cube Size", sMax * scale2);
                     telemetry.addData("Status", "End img processing: " + runtime.toString());
 
                     telemetry.update();
-                    if(S != "NONE")RECOGNISED = true;
                                 }
-            }
         }
 
     }
@@ -189,7 +191,7 @@ public class objectRecognition extends LinearOpMode {
         Q[st][1] = y;
         lee_matrix[x][y] = true;
 
-        while(st < dr && st < 100)
+        while(st < dr)
         {
             for (int d = 0; d < 8; ++d)
             {
@@ -218,7 +220,7 @@ public class objectRecognition extends LinearOpMode {
         Q[st][1] = y;
         lee_matrix[x][y] = false;
 
-        while(st < dr && st < 100)
+        while(st < dr)
         {
             CheckPos(Q[st][0]);
             for (int d = 0; d < 8; ++d)
