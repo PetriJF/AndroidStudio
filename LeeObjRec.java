@@ -107,9 +107,9 @@ public class objectRecognition extends LinearOpMode {
                     {
                         if(lee_matrix[x][y] == false && cube_color[x][y] == true) {
                             objS = 1;
-                            telemetry.update();
-                            // Lee(x, y);
-                            telemetry.update();
+                           // telemetry.update();
+                            Lee(x, y);
+                            //telemetry.update();
                             if (objS > sMax) {
                                 sMax = objS;
                                 xCube = x;
