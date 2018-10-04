@@ -35,20 +35,24 @@ public class objectRecognition extends LinearOpMode {
 
         waitForStart();
         runtime.reset();
-        while (opModeIsActive()) {
+        while (opModeIsActive())
+        {
 
                 VuforiaLocalizer.CloseableFrame frame = locale.getFrameQueue().take(); //takes the frame at the head of the queue
                 Image img = null;
                 long numImages = frame.getNumImages();
 
-                for (int i = 0; i < numImages; i++) {
-                    if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB888) {
+                for (int i = 0; i < numImages; i++)
+                {
+                    if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB888)
+                    {
                         img = frame.getImage(i);
                         break;
                     }
                 }
 
-                if (img != null) {
+                if (img != null) 
+                {
 
                     telemetry.addData("Status", "Start img processing: " + runtime.toString());
                     ByteBuffer pixels = img.getPixels();
@@ -67,9 +71,9 @@ public class objectRecognition extends LinearOpMode {
 
                     /* finding where 0,0 and width, height is: */
                     int[] pixel = new int[5];
-              /*  pixel = GetRGB(0, 0, pixelArray, imageWidth); ///dreapta sus
+              /*  pixel = GetRGB(0, 0, pixelArray, imageWidth); ///right up
                 ShowRGB(pixel);
-                pixel = GetRGB(imageWidth - 1, imageHeight  - 1, pixelArray, imageWidth);///stanga jos
+                pixel = GetRGB(imageWidth - 1, imageHeight  - 1, pixelArray, imageWidth);///left down
                 ShowRGB(pixel);*/
 
                     cube_color = new boolean[imageWidth / scale][imageHeight / scale];
@@ -79,13 +83,11 @@ public class objectRecognition extends LinearOpMode {
                         for (int x = 0; x < imageWidth - scale; x += scale)
                         {
 
-
                             pixel = GetRGB(x, y, pixelArray);
 
                             int sRed = 0;
                             int sGreen = 0;
                             int sBlue = 0;
-
 
                             for (int j = y; j < y + scale; ++j)
                                 for (int i = x; i < x + scale; ++i)
@@ -109,13 +111,14 @@ public class objectRecognition extends LinearOpMode {
                     lee_matrix = new boolean[imageWidth][imageHeight];
 
                     for (int y = 0; y < imageHeight; ++y)
-                        for (int x = 0; x < imageWidth; ++x) {
-                            if (lee_matrix[x][y] == false && cube_color[x][y] == true) {
+                        for (int x = 0; x < imageWidth; ++x) 
+                        {
+                            if (lee_matrix[x][y] == false && cube_color[x][y] == true) 
+                            {
                                 objS = 1;
-                                // telemetry.update();
                                 Lee(x, y);
-                                //telemetry.update();
-                                if (objS > sMax) {
+                                if (objS > sMax) 
+                                {
                                     sMax = objS;
                                     xCube = x;
                                     yCube = y;
@@ -124,11 +127,7 @@ public class objectRecognition extends LinearOpMode {
                         }
 
                     Loc = new int[3];
-                    //telemetry.addData("Status", "NU");
-                    //telemetry.update();
                     ObjectLee(xCube, yCube);
-                    //telemetry.addData("Status", "DA");
-                    // telemetry.update();
                     int locMax = Loc[left];
                     if (Loc[center] > locMax) locMax = Loc[center];
                     if (Loc[right] > locMax) locMax = Loc[right];
@@ -144,7 +143,7 @@ public class objectRecognition extends LinearOpMode {
                     telemetry.addData("Status", "End img processing: " + runtime.toString());
 
                     telemetry.update();
-                                }
+               }
         }
 
     }
