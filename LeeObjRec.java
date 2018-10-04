@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.Image;
 import com.vuforia.PIXEL_FORMAT;
 import com.vuforia.Vuforia;
@@ -16,8 +17,10 @@ import java.nio.ByteBuffer;
 @Autonomous(name="DetectObject", group="Linear Opmode")
 public class objectRecognition extends LinearOpMode {
 
+    private ElapsedTime runtime = new ElapsedTime();
     int minD = 30000 / 4, objS, imageWidth, imageHeight, left = 0, center = 1, right = 2; //minD = minimal difference between 2 colors for comparision
     boolean[][] cube_color, lee_matrix;
+    boolean RECOGNISED = false;
     int[] Loc;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -34,111 +37,112 @@ public class objectRecognition extends LinearOpMode {
         waitForStart();
         while (opModeIsActive()) {
 
-            VuforiaLocalizer.CloseableFrame frame = locale.getFrameQueue().take(); //takes the frame at the head of the queue
-            Image img = null;
-            long numImages = frame.getNumImages();
+            while (!RECOGNISED) {
+                VuforiaLocalizer.CloseableFrame frame = locale.getFrameQueue().take(); //takes the frame at the head of the queue
+                Image img = null;
+                long numImages = frame.getNumImages();
 
-            for (int i = 0; i < numImages; i++) {
-                if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB888) {
-                    img = frame.getImage(i);
-                    break;
+                for (int i = 0; i < numImages; i++) {
+                    if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB888) {
+                        img = frame.getImage(i);
+                        break;
+                    }
                 }
-            }
 
-            if (img != null) {
-                ByteBuffer pixels = img.getPixels();
-                byte[] pixelArray = new byte[pixels.remaining()];
-                pixels.get(pixelArray, 0, pixelArray.length);
-                imageWidth = img.getWidth();
-                imageHeight = img.getHeight();
-                int stride = img.getStride();
-               // telemetry.addData("Image", "Image width: " + imageWidth);
-               // telemetry.addData("Image", "Image height: " + imageHeight);
-                //telemetry.addData("Image", "Image stride: " + stride);
-                //telemetry.addData("Image", "First pixel byte: " + pixelArray[0]);
-                //telemetry.addData("Length", pixelArray.length);
-               // telemetry.addLine();
-               // telemetry.update();
+                if (img != null) {
 
-                /* finding where 0,0 and width, height is: */
-                int[] pixel = new int[5];
+                    telemetry.addData("Status", "Start img processing: " + runtime.toString());
+                    ByteBuffer pixels = img.getPixels();
+                    byte[] pixelArray = new byte[pixels.remaining()];
+                    pixels.get(pixelArray, 0, pixelArray.length);
+                    imageWidth = img.getWidth();
+                    imageHeight = img.getHeight();
+                    int stride = img.getStride();
+                    // telemetry.addData("Image", "Image width: " + imageWidth);
+                    // telemetry.addData("Image", "Image height: " + imageHeight);
+                    //telemetry.addData("Image", "Image stride: " + stride);
+                    //telemetry.addData("Image", "First pixel byte: " + pixelArray[0]);
+                    //telemetry.addData("Length", pixelArray.length);
+                    // telemetry.addLine();
+                    // telemetry.update();
+
+                    /* finding where 0,0 and width, height is: */
+                    int[] pixel = new int[5];
               /*  pixel = GetRGB(0, 0, pixelArray, imageWidth); ///dreapta sus
                 ShowRGB(pixel);
                 pixel = GetRGB(imageWidth - 1, imageHeight  - 1, pixelArray, imageWidth);///stanga jos
                 ShowRGB(pixel);*/
 
-                cube_color = new boolean[imageWidth / 2][imageHeight / 2] ;
+                    cube_color = new boolean[imageWidth / 2][imageHeight / 2];
 
-                for(int y = 0; y < imageHeight; y += 2)
-                    for(int x = 0; x < imageWidth; x += 2)
-                    {
-
-
-                        pixel = GetRGB(x, y, pixelArray);
-
-                        int sRed = 0;
-                        int sGreen = 0;
-                        int sBlue = 0;
+                    for (int y = 0; y < imageHeight; y += 2)
+                        for (int x = 0; x < imageWidth; x += 2) {
 
 
-                        for (int j = y; j <= y + 1; j++)
-                            for (int i = x; i <= x + 1; i++)
-                            {
-                                pixel = GetRGB(i, j, pixelArray);
-                                sRed += pixel[0];
-                                sGreen += pixel[1];
-                                sBlue += pixel[2];
+                            pixel = GetRGB(x, y, pixelArray);
 
-                            }
-                        int d = Distance(sRed / 4, sGreen / 4, sBlue / 4, 0, 127, 127);
-                        if(d < minD)
-                            cube_color[x / 2][y / 2] = true;
-                        else cube_color[x / 2][y / 2] = false;
-                    }
+                            int sRed = 0;
+                            int sGreen = 0;
+                            int sBlue = 0;
+
+
+                            for (int j = y; j <= y + 1; j++)
+                                for (int i = x; i <= x + 1; i++) {
+                                    pixel = GetRGB(i, j, pixelArray);
+                                    sRed += pixel[0];
+                                    sGreen += pixel[1];
+                                    sBlue += pixel[2];
+
+                                }
+                            int d = Distance(sRed / 4, sGreen / 4, sBlue / 4, 0, 127, 127);
+                            if (d < minD)
+                                cube_color[x / 2][y / 2] = true;
+                            else cube_color[x / 2][y / 2] = false;
+                        }
 
                     imageWidth /= 2;
                     imageHeight /= 2;
 
-                int xCube = 0, yCube = 0, sMax = 0;
-                lee_matrix = new boolean[imageWidth][imageHeight];
+                    int xCube = 0, yCube = 0, sMax = 0;
+                    lee_matrix = new boolean[imageWidth][imageHeight];
 
-                for(int y = 0; y < imageHeight; ++y)
-                    for(int x = 0; x < imageWidth; ++x)
-                    {
-                        if(lee_matrix[x][y] == false && cube_color[x][y] == true) {
-                            objS = 1;
-                           // telemetry.update();
-                            Lee(x, y);
-                            //telemetry.update();
-                            if (objS > sMax) {
-                                sMax = objS;
-                                xCube = x;
-                                yCube = y;
+                    for (int y = 0; y < imageHeight; ++y)
+                        for (int x = 0; x < imageWidth; ++x) {
+                            if (lee_matrix[x][y] == false && cube_color[x][y] == true) {
+                                objS = 1;
+                                // telemetry.update();
+                                Lee(x, y);
+                                //telemetry.update();
+                                if (objS > sMax) {
+                                    sMax = objS;
+                                    xCube = x;
+                                    yCube = y;
+                                }
                             }
                         }
-                    }
 
-                Loc = new int[3];
-                //telemetry.addData("Status", "NU");
-               //telemetry.update();
-                ObjectLee(xCube, yCube);
-                //telemetry.addData("Status", "DA");
-               // telemetry.update();
-                int locMax = Loc[left];
-                if(Loc[center] > locMax)locMax = Loc[center];
-                if(Loc[right] > locMax)locMax = Loc[right];
-                String S = "NONE";
-                if(Loc[left] == locMax)S = "LEFT";
-                else if(Loc[center] == locMax)S = "CENTER";
-                else if(Loc[right] == locMax)S = "RIGHT";
+                    Loc = new int[3];
+                    //telemetry.addData("Status", "NU");
+                    //telemetry.update();
+                    ObjectLee(xCube, yCube);
+                    //telemetry.addData("Status", "DA");
+                    // telemetry.update();
+                    int locMax = Loc[left];
+                    if (Loc[center] > locMax) locMax = Loc[center];
+                    if (Loc[right] > locMax) locMax = Loc[right];
+                    String S = "NONE";
+                    if (Loc[left] == locMax) S = "LEFT";
+                    else if (Loc[center] == locMax) S = "CENTER";
+                    else if (Loc[right] == locMax) S = "RIGHT";
 
-                telemetry.addData("LOCATION", S);
+                    telemetry.addData("LOCATION", S);
 
-                telemetry.update();
+                    telemetry.addData("Status", "End img processing: " + runtime.toString());
 
+                    telemetry.update();
+                    if(S != "NONE")RECOGNISED = true;
+                                }
             }
-
-            //telemetry.update();
         }
 
     }
