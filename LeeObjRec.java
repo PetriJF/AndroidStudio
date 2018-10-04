@@ -52,13 +52,13 @@ public class objectRecognition extends LinearOpMode {
                 imageWidth = img.getWidth();
                 imageHeight = img.getHeight();
                 int stride = img.getStride();
-                telemetry.addData("Image", "Image width: " + imageWidth);
-                telemetry.addData("Image", "Image height: " + imageHeight);
-                telemetry.addData("Image", "Image stride: " + stride);
-                telemetry.addData("Image", "First pixel byte: " + pixelArray[0]);
-                telemetry.addData("Length", pixelArray.length);
-                telemetry.addLine();
-                telemetry.update();
+               // telemetry.addData("Image", "Image width: " + imageWidth);
+               // telemetry.addData("Image", "Image height: " + imageHeight);
+                //telemetry.addData("Image", "Image stride: " + stride);
+                //telemetry.addData("Image", "First pixel byte: " + pixelArray[0]);
+                //telemetry.addData("Length", pixelArray.length);
+               // telemetry.addLine();
+               // telemetry.update();
 
                 /* finding where 0,0 and width, height is: */
                 int[] pixel = new int[5];
@@ -67,47 +67,67 @@ public class objectRecognition extends LinearOpMode {
                 pixel = GetRGB(imageWidth - 1, imageHeight  - 1, pixelArray, imageWidth);///stanga jos
                 ShowRGB(pixel);*/
 
-                cube_color = new boolean[imageWidth][imageHeight];
+                cube_color = new boolean[imageWidth / 2][imageHeight / 2] ;
 
-                for(int y = 0; y < imageHeight; ++y)
-                    for(int x = 0; x < imageWidth; ++x){
+                for(int y = 0; y < imageHeight; y += 2)
+                    for(int x = 0; x < imageWidth; x += 2)
+                    {
+
 
                         pixel = GetRGB(x, y, pixelArray);
-                        int d = Distance(pixel[0], pixel[1], pixel[2], 0, 127, 127);
+
+                        int sRed = 0;
+                        int sGreen = 0;
+                        int sBlue = 0;
+
+
+                        for (int j = y; j <= y + 1; j++)
+                            for (int i = x; i <= x + 1; i++)
+                            {
+                                pixel = GetRGB(i, j, pixelArray);
+                                sRed += pixel[0];
+                                sGreen += pixel[1];
+                                sBlue += pixel[2];
+
+                            }
+                        int d = Distance(sRed / 4, sGreen / 4, sBlue / 4, 0, 127, 127);
                         if(d < minD)
-                            cube_color[x][y] = true;
-                        else cube_color[x][y] = false;
-                                                         }
-
-                 int xCube = 0, yCube = 0, sMax = 0;
-                 lee_matrix = new boolean[imageWidth][imageHeight];
-
-                 for(int y = 0; y < imageHeight; ++y)
-                    for(int x = 0; x < imageWidth; ++x)
-                    {
-                            if(lee_matrix[x][y] == false && cube_color[x][y] == true) {
-                                objS = 1;
-                                telemetry.update();
-                               // Lee(x, y);
-                                telemetry.update();
-                                if (objS > sMax) {
-                                    sMax = objS;
-                                    xCube = x;
-                                    yCube = y;
-                                                 }
-                                                                                       }
+                            cube_color[x / 2][y / 2] = true;
+                        else cube_color[x / 2][y / 2] = false;
                     }
 
-                 Loc = new int[3];
-                 telemetry.addData("Status", "NU");
-                 telemetry.update();
-                 ObjectLee(xCube, yCube);
-                 telemetry.addData("Status", "DA");
-                 telemetry.update();
-                 int locMax = Loc[left];
-                 if(Loc[center] > locMax)locMax = Loc[center];
-                 if(Loc[right] > locMax)locMax = Loc[right];
-                 String S = "NONE";
+                    imageWidth /= 2;
+                    imageHeight /= 2;
+
+                int xCube = 0, yCube = 0, sMax = 0;
+                lee_matrix = new boolean[imageWidth][imageHeight];
+
+                for(int y = 0; y < imageHeight; ++y)
+                    for(int x = 0; x < imageWidth; ++x)
+                    {
+                        if(lee_matrix[x][y] == false && cube_color[x][y] == true) {
+                            objS = 1;
+                            telemetry.update();
+                            // Lee(x, y);
+                            telemetry.update();
+                            if (objS > sMax) {
+                                sMax = objS;
+                                xCube = x;
+                                yCube = y;
+                            }
+                        }
+                    }
+
+                Loc = new int[3];
+                //telemetry.addData("Status", "NU");
+               //telemetry.update();
+                ObjectLee(xCube, yCube);
+                //telemetry.addData("Status", "DA");
+               // telemetry.update();
+                int locMax = Loc[left];
+                if(Loc[center] > locMax)locMax = Loc[center];
+                if(Loc[right] > locMax)locMax = Loc[right];
+                String S = "NONE";
                 if(Loc[left] == locMax)S = "LEFT";
                 else if(Loc[center] == locMax)S = "CENTER";
                 else if(Loc[right] == locMax)S = "RIGHT";
@@ -142,7 +162,7 @@ public class objectRecognition extends LinearOpMode {
         for (int i = index; i <= index + 2; i++){
             if (pixelArray[i] < 0) pixelArray[i] += 128; //sometimes it gives negative values: -1 = 127, -2 = 126 etc
             pixel[i - index] = pixelArray[i];// * 2;  // * 2 is for comparison with 16 bit (0, 255) colors
-                                                }
+        }
         return pixel;
     }
 
@@ -159,10 +179,10 @@ public class objectRecognition extends LinearOpMode {
 
         int[] dx = {-1, 0, 1, -1, 1, -1, 0, 1};
         int[] dy = {-1, -1, -1, 0, 0, 1, 1, 1};
-       int[][] Q = new int[imageWidth * imageHeight + 1][2];
-       int st = 0, dr = 1;
-       Q[st][0] = x;
-       Q[st][1] = y;
+        int[][] Q = new int[imageWidth * imageHeight + 1][2];
+        int st = 0, dr = 1;
+        Q[st][0] = x;
+        Q[st][1] = y;
         lee_matrix[x][y] = true;
 
         while(st < dr && st < 100)
@@ -178,7 +198,7 @@ public class objectRecognition extends LinearOpMode {
                     Q[dr][1] = y2;
                     ++dr;
                 }
-             }
+            }
             ++st;
         }
 
@@ -217,11 +237,12 @@ public class objectRecognition extends LinearOpMode {
         if(x < imageWidth / 3)++Loc[left];
         else if(x < 2 * imageWidth / 3)++Loc[center];
         else ++Loc[right];
-                               }
+    }
 
     public boolean Inside(int x, int y){
 
         return (x >= 0 && x < imageWidth && y >= 0 && y < imageHeight);
-                                       }
+    }
 }
+
 
