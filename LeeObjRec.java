@@ -18,7 +18,7 @@ import java.nio.ByteBuffer;
 public class objectRecognition extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
-    int minD = 30000 / 4, objS, imageWidth, imageHeight, left = 0, center = 1, right = 2, scale = 4; //minD = minimal difference between 2 colors for comparision
+    int minD = 30000 / 4, objS, imageWidth, imageHeight, left = 0, center = 1, right = 2, scale = 8; //minD = minimal difference between 2 colors for comparision
     boolean[][] cube_color, lee_matrix;
     int[] Loc;
     @Override
@@ -56,7 +56,7 @@ public class objectRecognition extends LinearOpMode {
                     pixels.get(pixelArray, 0, pixelArray.length);
                     imageWidth = img.getWidth();
                     imageHeight = img.getHeight();
-                    int stride = img.getStride();
+                    //int stride = img.getStride();
                     // telemetry.addData("Image", "Image width: " + imageWidth);
                     // telemetry.addData("Image", "Image height: " + imageHeight);
                     //telemetry.addData("Image", "Image stride: " + stride);
@@ -75,8 +75,8 @@ public class objectRecognition extends LinearOpMode {
                     cube_color = new boolean[imageWidth / scale][imageHeight / scale];
                     int scale2 = scale * scale;
 
-                    for (int y = 0; y < imageHeight; y += scale)
-                        for (int x = 0; x < imageWidth; x += scale)
+                    for (int y = 0; y < imageHeight - scale; y += scale)
+                        for (int x = 0; x < imageWidth - scale; x += scale)
                         {
 
 
