@@ -26,7 +26,11 @@ public class objectRecognition extends LinearOpMode {
 
 
         VuforiaLocalizer.Parameters params = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
-        params.vuforiaLicenseKey = "ASCPGNz/////AAABmduHqNxelkM0iYG1koMxB5ZrInt8LFjdO/quEXlhG4o5uE4U/EtrZaYczNr7G6TB88wl39Ajg2kXLOTpUnvDqfwba1sfK6+GSziuEvpDkI4ldc++m6P93BO2gbLjiS5unVSqzKvAHR8LAN11ZJh07YsIF8JAbDSjUtR0eRfJsHuU1sNyoP4yX+LKHRyvUAmGloYRsYItswmOD03kImxhfwREbXGP/eCEwPfO0Iv8kAZImUpdL+LjPcnEroUqVVMcUUjFU/ggn4Qt6sB7w2MOU7P1HooFtRXx7j6UK+S9Hlv0rUfMxdEoWbju6pTmaFril3igTHM1rIo5tWLu1EbeG3raK6myZG/pviMbYTjwfX0X";
+        params.vuforiaLicenseKey = "ASCPGNz/////AAABmduHqNxelkM0iYG1koMxB5ZrInt8LFjdO/quEXlhG4o5uE4U/EtrZaYczNr7G6TB88wl39Ajg2kXLOTpUnvDqfwba1sfK6+GSziuEvpDkI4ldc
+            
+            
+            
+            m6P93BO2gbLjiS5unVSqzKvAHR8LAN11ZJh07YsIF8JAbDSjUtR0eRfJsHuU1sNyoP4yX+LKHRyvUAmGloYRsYItswmOD03kImxhfwREbXGP/eCEwPfO0Iv8kAZImUpdL+LjPcnEroUqVVMcUUjFU/ggn4Qt6sB7w2MOU7P1HooFtRXx7j6UK+S9Hlv0rUfMxdEoWbju6pTmaFril3igTHM1rIo5tWLu1EbeG3raK6myZG/pviMbYTjwfX0X";
         params.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
 
         VuforiaLocalizer locale = ClassFactory.createVuforiaLocalizer(params);
@@ -79,8 +83,8 @@ public class objectRecognition extends LinearOpMode {
                 Object Cube = new Object();
                 lee_matrix = new boolean[imageWidth][imageHeight];
 
-                for (int y = 0; y < imageHeight; ++y)
-                    for (int x = 0; x < imageWidth; ++x)
+                for (int y = 0; y < imageHeight; y++)
+                    for (int x = 0; x < imageWidth; x++)
                     {
                         if (!lee_matrix[x][y] && cube_color[x][y])
                         {
@@ -130,8 +134,8 @@ public class objectRecognition extends LinearOpMode {
                 int sGreen = 0;
                 int sBlue = 0;
 
-                for (int j = y; j < y + scale; ++j)
-                    for (int i = x; i < x + scale; ++i)
+                for (int j = y; j < y + scale; j++)
+                    for (int i = x; i < x + scale; i++)
                     {
                         pixel = GetRGB(i, j);
                         sRed += pixel[0];
@@ -188,7 +192,7 @@ public class objectRecognition extends LinearOpMode {
         {
             ++objS;
             CheckPos(Q[st][0]);
-            for (int d = 0; d < 8; ++d)
+            for (int d = 0; d < 8; d++)
             {
                 int x2 = Q[st][0] + dx[d], y2 = Q[st][1] + dy[d];
                 if (Inside(x2, y2) && !lee_matrix[x2][y2] && cube_color[x2][y2])
