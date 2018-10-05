@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.Image;
 import com.vuforia.PIXEL_FORMAT;
@@ -18,11 +17,13 @@ import java.nio.ByteBuffer;
 public class objectRecognition extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
-    int minD = 30000 / 4, objS, imageWidth, imageHeight, left = 0, center = 1, right = 2, scale = 8; //minD = minimal difference between 2 colors for comparision
-    boolean[][] cube_color, lee_matrix;
-    int[] Loc;
+    private int objS, imageWidth, imageHeight, scale = 8, left = 0, center = 1, right = 2; //minD = minimal difference between 2 colors for comparision
+    private boolean[][] cube_color, lee_matrix;
+    private int[] Loc;
+    private byte[] pixelArray;
     @Override
     public void runOpMode() throws InterruptedException {
+
 
         VuforiaLocalizer.Parameters params = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         params.vuforiaLicenseKey = "ASCPGNz/////AAABmduHqNxelkM0iYG1koMxB5ZrInt8LFjdO/quEXlhG4o5uE4U/EtrZaYczNr7G6TB88wl39Ajg2kXLOTpUnvDqfwba1sfK6+GSziuEvpDkI4ldc++m6P93BO2gbLjiS5unVSqzKvAHR8LAN11ZJh07YsIF8JAbDSjUtR0eRfJsHuU1sNyoP4yX+LKHRyvUAmGloYRsYItswmOD03kImxhfwREbXGP/eCEwPfO0Iv8kAZImUpdL+LjPcnEroUqVVMcUUjFU/ggn4Qt6sB7w2MOU7P1HooFtRXx7j6UK+S9Hlv0rUfMxdEoWbju6pTmaFril3igTHM1rIo5tWLu1EbeG3raK6myZG/pviMbYTjwfX0X";
@@ -38,149 +39,142 @@ public class objectRecognition extends LinearOpMode {
         while (opModeIsActive())
         {
 
-                VuforiaLocalizer.CloseableFrame frame = locale.getFrameQueue().take(); //takes the frame at the head of the queue
-                Image img = null;
-                long numImages = frame.getNumImages();
+            double whileStart = runtime.seconds();
+            VuforiaLocalizer.CloseableFrame frame = locale.getFrameQueue().take(); //takes the frame at the head of the queue
+            Image img = null;
+            long numImages = frame.getNumImages();
 
-                for (int i = 0; i < numImages; i++)
+            for (int i = 0; i < numImages; i++)
+            {
+                if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB888)
                 {
-                    if (frame.getImage(i).getFormat() == PIXEL_FORMAT.RGB888)
-                    {
-                        img = frame.getImage(i);
-                        break;
-                    }
+                    img = frame.getImage(i);
+                    break;
                 }
+            }
 
-                if (img != null) 
-                {
+            if (img != null)
+            {
 
-                    telemetry.addData("Status", "Start img processing: " + runtime.toString());
-                    ByteBuffer pixels = img.getPixels();
-                    byte[] pixelArray = new byte[pixels.remaining()];
-                    pixels.get(pixelArray, 0, pixelArray.length);
-                    imageWidth = img.getWidth();
-                    imageHeight = img.getHeight();
-                    //int stride = img.getStride();
-                    // telemetry.addData("Image", "Image width: " + imageWidth);
-                    // telemetry.addData("Image", "Image height: " + imageHeight);
-                    //telemetry.addData("Image", "Image stride: " + stride);
-                    //telemetry.addData("Image", "First pixel byte: " + pixelArray[0]);
-                    //telemetry.addData("Length", pixelArray.length);
-                    // telemetry.addLine();
-                    // telemetry.update();
+                telemetry.addData("Status", "Start img processing: " + runtime.toString());
+                ByteBuffer pixels = img.getPixels();
+                pixelArray = new byte[pixels.remaining()];
+                pixels.get(pixelArray, 0, pixelArray.length);
+                pixels = null;
+                imageWidth = img.getWidth();
+                imageHeight = img.getHeight();
+                /*int stride = img.getStride();
+                  telemetry.addData("Image", "Image width: " + imageWidth);
+                  telemetry.addData("Image", "Image height: " + imageHeight);
+                  telemetry.addData("Image", "Image stride: " + stride);
+                  telemetry.addData("Image", "First pixel byte: " + pixelArray[0]);
+                  telemetry.addData("Length", pixelArray.length);
+                  0, 0 right up
+                  imageWidth - 1, imageHeight  - 1 left down*/
 
-                    /* finding where 0,0 and width, height is: */
-                    int[] pixel = new int[5];
-              /*  pixel = GetRGB(0, 0, pixelArray, imageWidth); ///right up
-                ShowRGB(pixel);
-                pixel = GetRGB(imageWidth - 1, imageHeight  - 1, pixelArray, imageWidth);///left down
-                ShowRGB(pixel);*/
+                cube_color = new boolean[imageWidth / scale][imageHeight / scale];
+                FindColor();
+                pixelArray = null;
 
-                    cube_color = new boolean[imageWidth / scale][imageHeight / scale];
-                    int scale2 = scale * scale;
+                Object Cube = new Object();
+                lee_matrix = new boolean[imageWidth][imageHeight];
 
-                    for (int y = 0; y < imageHeight - scale; y += scale)
-                        for (int x = 0; x < imageWidth - scale; x += scale)
+                for (int y = 0; y < imageHeight; ++y)
+                    for (int x = 0; x < imageWidth; ++x)
+                    {
+                        if (!lee_matrix[x][y] && cube_color[x][y])
                         {
-
-                            pixel = GetRGB(x, y, pixelArray);
-
-                            int sRed = 0;
-                            int sGreen = 0;
-                            int sBlue = 0;
-
-                            for (int j = y; j < y + scale; ++j)
-                                for (int i = x; i < x + scale; ++i)
-                                {
-                                    pixel = GetRGB(i, j, pixelArray);
-                                    sRed += pixel[0];
-                                    sGreen += pixel[1];
-                                    sBlue += pixel[2];
-                                }
-
-                            int d = Distance(sRed / scale2, sGreen / scale2, sBlue / scale2, 0, 127, 127);
-                            if (d < minD)
-                                cube_color[x / scale][y / scale] = true;
-                            else cube_color[x / scale][y / scale] = false;
-                        }
-
-                    imageWidth /= scale;
-                    imageHeight /= scale;
-
-                    int xCube = 0, yCube = 0, sMax = 0;
-                    lee_matrix = new boolean[imageWidth][imageHeight];
-
-                    for (int y = 0; y < imageHeight; ++y)
-                        for (int x = 0; x < imageWidth; ++x) 
-                        {
-                            if (lee_matrix[x][y] == false && cube_color[x][y] == true) 
+                            objS = 0;
+                            Loc = new int[3];
+                            Lee(x, y);
+                            if (objS > Cube.size)
                             {
-                                objS = 1;
-                                Lee(x, y);
-                                if (objS > sMax) 
-                                {
-                                    sMax = objS;
-                                    xCube = x;
-                                    yCube = y;
-                                }
+                                Cube.size = objS;
+                                Cube.x = x;
+                                Cube.y = y;
+                                Cube.Loc = Loc;
                             }
                         }
+                    }
 
-                    Loc = new int[3];
-                    ObjectLee(xCube, yCube);
-                    int locMax = Loc[left];
-                    if (Loc[center] > locMax) locMax = Loc[center];
-                    if (Loc[right] > locMax) locMax = Loc[right];
-                    String S = "NONE";
-                    if (Loc[left] == locMax) S = "LEFT";
-                    else if (Loc[center] == locMax) S = "CENTER";
-                    else if (Loc[right] == locMax) S = "RIGHT";
+                 String S;
+                 if(Cube.size == 0)S = "NONE";
+                 else S = Location(Cube.Loc);
+                 telemetry.addData("LOCATION", S);
+                 if(Cube.size != 0)
+                 {
+                    telemetry.addData("Cube X", Cube.x * scale);
+                    telemetry.addData("Cube Y", Cube.y * scale);
+                    telemetry.addData("Cube Size", Cube.size * scale * scale);
+                 }
+                 telemetry.addData("Status", "End img processing: " + runtime.toString());
+            }
 
-                    telemetry.addData("LOCATION", S);
-                    telemetry.addData("Cube X", xCube * scale);
-                    telemetry.addData("Cube Y", yCube * scale);
-                    telemetry.addData("Cube Size", sMax * scale2);
-                    telemetry.addData("Status", "End img processing: " + runtime.toString());
-
-                    telemetry.update();
-               }
+            double whileTime = runtime.seconds() - whileStart;
+            whileTime = (double)((int)(whileTime * 100)) / 100;
+            telemetry.addData("Time for one while loop", whileTime);
+            telemetry.update();
         }
 
     }
 
-    public int Distance(int x1, int y1, int z1, int x2, int y2, int z2){
+    private void FindColor(){
+
+        int scale2 = scale * scale, minD = 7500;
+        for (int y = 0; y < imageHeight - scale; y += scale)
+            for (int x = 0; x < imageWidth - scale; x += scale)
+            {
+
+                int[] pixel;
+                int sRed = 0;
+                int sGreen = 0;
+                int sBlue = 0;
+
+                for (int j = y; j < y + scale; ++j)
+                    for (int i = x; i < x + scale; ++i)
+                    {
+                        pixel = GetRGB(i, j);
+                        sRed += pixel[0];
+                        sGreen += pixel[1];
+                        sBlue += pixel[2];
+                    }
+
+                int d = Distance(sRed / scale2, sGreen / scale2, sBlue / scale2, 0, 127, 127);
+                if(d < minD)
+                    cube_color[x / scale][y / scale] = true;
+            }
+
+        imageWidth /= scale;
+        imageHeight /= scale;
+
+    }
+
+    private int[] GetRGB(int x, int y){
+
+        int index = 3 * (y * imageWidth + x);
+        int[] pixel = new int[3];
+        for (int i = index; i <= index + 2; i++)
+        {
+            if (pixelArray[i] < 0)
+                pixelArray[i] += 128; //sometimes it gives negative values: -1 = 127, -2 = 126 etc
+            pixel[i - index] = pixelArray[i];
+        }
+        return pixel;
+    }
+
+    private int Distance(int x1, int y1, int z1, int x2, int y2, int z2){
 
         int dx = x1 - x2, dy = y1 - y2, dz = z1 - z2;
         return dx * dx + dy * dy + dz * dz;
     }
 
-    public int Max(int a, int b){
-        if(a > b)return a;
-        return b;
-    }
-    public int[] GetRGB(int x, int y, byte[] pixelArray) {
-
-        int index = 3 * (y * imageWidth + x);
-        int[] pixel = new int[5];
-        pixel[3] = x;
-        pixel[4] = y;
-        for (int i = index; i <= index + 2; i++){
-            if (pixelArray[i] < 0) pixelArray[i] += 128; //sometimes it gives negative values: -1 = 127, -2 = 126 etc
-            pixel[i - index] = pixelArray[i];// * 2;  // * 2 is for comparison with 16 bit (0, 255) colors
-        }
-        return pixel;
+    class Object{
+        int x, y, size;
+        int[] Loc = new int[3];
+        private Object(){}
     }
 
-    public void ShowRGB(int[] pixel){
-        telemetry.addData("X", pixel[3]);
-        telemetry.addData("Y", pixel[4]);
-        telemetry.addData("Red", pixel[0]);
-        telemetry.addData("Green", pixel[1]);
-        telemetry.addData("Blue", pixel[2]);
-        telemetry.addLine();
-    }
-
-    public void Lee(int x, int y){
+    private void Lee(int x, int y){
 
         int[] dx = {-1, 0, 1, -1, 1, -1, 0, 1};
         int[] dy = {-1, -1, -1, 0, 0, 1, 1, 1};
@@ -192,12 +186,13 @@ public class objectRecognition extends LinearOpMode {
 
         while(st < dr)
         {
+            ++objS;
+            CheckPos(Q[st][0]);
             for (int d = 0; d < 8; ++d)
             {
                 int x2 = Q[st][0] + dx[d], y2 = Q[st][1] + dy[d];
-                if (Inside(x2, y2) && lee_matrix[x2][y2] == false && cube_color[x2][y2] == true)
+                if (Inside(x2, y2) && !lee_matrix[x2][y2] && cube_color[x2][y2])
                 {
-                    ++objS;
                     lee_matrix[x2][y2] = true;
                     Q[dr][0] = x2;
                     Q[dr][1] = y2;
@@ -209,45 +204,30 @@ public class objectRecognition extends LinearOpMode {
 
     }
 
-    public void ObjectLee(int x, int y){
-
-        int[] dx = {-1, 0, 1, -1, 1, -1, 0, 1};
-        int[] dy = {-1, -1, -1, 0, 0, 1, 1, 1};
-        int[][] Q = new int[imageWidth * imageHeight][2];
-        int st = 0, dr = 1;
-        Q[st][0] = x;
-        Q[st][1] = y;
-        lee_matrix[x][y] = false;
-
-        while(st < dr)
-        {
-            CheckPos(Q[st][0]);
-            for (int d = 0; d < 8; ++d)
-            {
-                int x2 = Q[st][0] + dx[d], y2 = Q[st][1] + dy[d];
-                if (Inside(x2, y2) && lee_matrix[x2][y2] == true && cube_color[x2][y2] == true)
-                {
-                    lee_matrix[x2][y2] = false;
-                    Q[dr][0] = x2;
-                    Q[dr][1] = y2;
-                    ++dr;
-                }
-            }
-            ++st;
-        }
-    }
-
-    public void CheckPos(int x){
+    private void CheckPos(int x){
 
         if(x < imageWidth / 3)++Loc[left];
         else if(x < 2 * imageWidth / 3)++Loc[center];
         else ++Loc[right];
     }
 
-    public boolean Inside(int x, int y){
+    private boolean Inside(int x, int y){
 
         return (x >= 0 && x < imageWidth && y >= 0 && y < imageHeight);
     }
+
+    private String Location(int[] Loc){
+
+        int locMax = Loc[left];
+        if (Loc[center] > locMax)
+            locMax = Loc[center];
+        if (Loc[right] > locMax)
+            locMax = Loc[right];
+
+        if (Loc[left] == locMax) return "LEFT";
+        if (Loc[center] == locMax) return "CENTER";
+        if (Loc[right] == locMax) return "RIGHT";
+
+        return "?";
+    }
 }
-
-
