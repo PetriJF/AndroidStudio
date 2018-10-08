@@ -17,9 +17,9 @@ import java.nio.ByteBuffer;
 public class objectRecognition extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
-    private int objS, imageWidth, imageHeight, scale = 8, left = 0, center = 1, right = 2; 
+    private int imageWidth, imageHeight, scale = 8, left = 0, center = 1, right = 2; 
     private boolean[][] cube_color, lee_matrix;
-    private int[] Loc;
+    private Object obj;
     private byte[] pixelArray;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -84,16 +84,9 @@ public class objectRecognition extends LinearOpMode {
                     {
                         if (!lee_matrix[x][y] && cube_color[x][y])
                         {
-                            objS = 0;
-                            Loc = new int[3];
+                            obj = new Object();
                             Lee(x, y);
-                            if (objS > Cube.size)
-                            {
-                                Cube.size = objS;
-                                Cube.x = x;
-                                Cube.y = y;
-                                Cube.Loc = Loc;
-                            }
+                            if (obj.size > Cube.size)Cube = obj;
                         }
                     }
 
@@ -175,18 +168,22 @@ public class objectRecognition extends LinearOpMode {
     }
 
     private void Lee(int x, int y){
-
+        
         int[] dx = {-1, 0, 1, -1, 1, -1, 0, 1};
         int[] dy = {-1, -1, -1, 0, 0, 1, 1, 1};
         int[][] Q = new int[imageWidth * imageHeight + 1][2];
         int st = 0, dr = 1;
+        
+        obj.x = x;
+        obj.y = y;
+        
         Q[st][0] = x;
         Q[st][1] = y;
         lee_matrix[x][y] = true;
 
         while(st < dr)
         {
-            ++objS;
+            ++obj.size;
             CheckPos(Q[st][0]);
             for (int d = 0; d < 8; d++)
             {
@@ -206,9 +203,9 @@ public class objectRecognition extends LinearOpMode {
 
     private void CheckPos(int x){
 
-        if(x < imageWidth / 3)++Loc[left];
-        else if(x < 2 * imageWidth / 3)++Loc[center];
-        else ++Loc[right];
+        if(x < imageWidth / 3)++obj.Loc[left];
+        else if(x < 2 * imageWidth / 3)++obj.Loc[center];
+        else ++obj.Loc[right];
     }
 
     private boolean Inside(int x, int y){
