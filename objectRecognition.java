@@ -27,7 +27,7 @@ public class objectRecognition extends LinearOpMode {
 
         VuforiaLocalizer.Parameters params = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         params.vuforiaLicenseKey = "ASCPGNz/////AAABmduHqNxelkM0iYG1koMxB5ZrInt8LFjdO/quEXlhG4o5uE4U/EtrZaYczNr7G6TB88wl39Ajg2kXLOTpUnvDqfwba1sfK6+GSziuEvpDkI4ldcm6P93BO2gbLjiS5unVSqzKvAHR8LAN11ZJh07YsIF8JAbDSjUtR0eRfJsHuU1sNyoP4yX+LKHRyvUAmGloYRsYItswmOD03kImxhfwREbXGP/eCEwPfO0Iv8kAZImUpdL+LjPcnEroUqVVMcUUjFU/ggn4Qt6sB7w2MOU7P1HooFtRXx7j6UK+S9Hlv0rUfMxdEoWbju6pTmaFril3igTHM1rIo5tWLu1EbeG3raK6myZG/pviMbYTjwfX0X";
-        params.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+       params.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
 
         VuforiaLocalizer locale = ClassFactory.createVuforiaLocalizer(params);
         Vuforia.setFrameFormat(PIXEL_FORMAT.RGB888, true);
