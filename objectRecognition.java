@@ -17,7 +17,7 @@ import java.nio.ByteBuffer;
 public class objectRecognition extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
-    private int imageWidth, imageHeight, scale = 8, left = 0, center = 1, right = 2; 
+    private int imageWidth, imageHeight, scale = 8, left = 0, center = 1, right = 2;
     private boolean[][] cube_color, lee_matrix;
     private Object obj;
     private byte[] pixelArray;
@@ -26,8 +26,8 @@ public class objectRecognition extends LinearOpMode {
 
 
         VuforiaLocalizer.Parameters params = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
-        params.vuforiaLicenseKey = "ASCPGNz/////AAABmduHqNxelkM0iYG1koMxB5ZrInt8LFjdO/quEXlhG4o5uE4U/EtrZaYczNr7G6TB88wl39Ajg2kXLOTpUnvDqfwba1sfK6+GSziuEvpDkI4ldcm6P93BO2gbLjiS5unVSqzKvAHR8LAN11ZJh07YsIF8JAbDSjUtR0eRfJsHuU1sNyoP4yX+LKHRyvUAmGloYRsYItswmOD03kImxhfwREbXGP/eCEwPfO0Iv8kAZImUpdL+LjPcnEroUqVVMcUUjFU/ggn4Qt6sB7w2MOU7P1HooFtRXx7j6UK+S9Hlv0rUfMxdEoWbju6pTmaFril3igTHM1rIo5tWLu1EbeG3raK6myZG/pviMbYTjwfX0X";
-       params.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+        params.vuforiaLicenseKey = "AfpNx0X/////AAAAGZqo1zzaiEnYutr1KL/q14AabZMVkQIew0DVRrGP3F+HyPHj4YEvNmrsUBFPix2HcpgAbnD7aH+/KCxsYf/WWTS4q15H39Y2M9g5M4Wud6WNufbs5HsGaB8ipxMCDpWqhYv6KgAihfO3Zq3az4utKZ94CIuXATsi3oNABVks52lkFng/9WOM0LaroowGIMFyprWRUjmfggfaGlu/6mpGSBkvpNRlD8TRXYt/W/Qho4B7G03thikhfsdpNRoNCcZMRaIzWyo5oGWzslxyvdDp0bxBQB8tZsTW8p288zfXBGtSQ8pTXsgKpmjwdStIP0pXjDJ9av0+CXhJblIGvcmvm7K5DqANWk0Z6whToWD0+K7S";
+        params.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
 
         VuforiaLocalizer locale = ClassFactory.createVuforiaLocalizer(params);
         Vuforia.setFrameFormat(PIXEL_FORMAT.RGB888, true);
@@ -90,17 +90,17 @@ public class objectRecognition extends LinearOpMode {
                         }
                     }
 
-                 String S;
-                 if(Cube.size == 0)S = "NONE";
-                 else S = Location(Cube.Loc);
-                 telemetry.addData("LOCATION", S);
-                 if(Cube.size != 0)
-                 {
+                String S;
+                if(Cube.size == 0)S = "NONE";
+                else S = Location(Cube.Loc);
+                telemetry.addData("LOCATION", S);
+                if(Cube.size != 0)
+                {
                     telemetry.addData("Cube X", Cube.x * scale);
                     telemetry.addData("Cube Y", Cube.y * scale);
                     telemetry.addData("Cube Size", Cube.size * scale * scale);
-                 }
-                 telemetry.addData("Status", "End img processing: " + runtime.toString());
+                }
+                telemetry.addData("Status", "End img processing: " + runtime.toString());
             }
 
             double whileTime = runtime.seconds() - whileStart;
@@ -168,15 +168,15 @@ public class objectRecognition extends LinearOpMode {
     }
 
     private void Lee(int x, int y){
-        
+
         int[] dx = {-1, 0, 1, -1, 1, -1, 0, 1};
         int[] dy = {-1, -1, -1, 0, 0, 1, 1, 1};
         int[][] Q = new int[imageWidth * imageHeight + 1][2];
         int st = 0, dr = 1;
-        
+
         obj.x = x;
         obj.y = y;
-        
+
         Q[st][0] = x;
         Q[st][1] = y;
         lee_matrix[x][y] = true;
