@@ -113,7 +113,7 @@ public class objectRecognition extends LinearOpMode {
 
     private void FindColor(){
 
-        int scale2 = scale * scale, minD = 7500;//minD = minimal difference between 2 colors for comparision
+        int scale2 = scale * scale, minD = 5000;//minD = minimal difference between 2 colors for comparision
         for (int y = 0; y < imageHeight - scale; y += scale)
             for (int x = 0; x < imageWidth - scale; x += scale)
             {
@@ -132,7 +132,7 @@ public class objectRecognition extends LinearOpMode {
                         sBlue += pixel[2];
                     }
 
-                int d = Distance(sRed / scale2, sGreen / scale2, sBlue / scale2, 0, 127, 127);
+                int d = Distance(sRed / scale2, sGreen / scale2, sBlue / scale2, 127, 127, 0);
                 if(d < minD)
                     cube_color[x / scale][y / scale] = true;
             }
