@@ -159,24 +159,24 @@ public class Autonomie extends LinearOpMode {
 
                         Object Sphere1 = new Object();
                         lee_matrix = new boolean[imageWidth ][imageHeight];
-                            for (int y = imageHeight / 5; y < imageHeight; y++)
+                            for (int y = 2 * imageHeight / 3; y < imageHeight; y++)
                                 for (int x = 0; x < Cube.x ; x++) {
                                     if (!lee_matrix[x][y] && cube_color[x][y]) {
                                         obj = new Object();
                                         Lee(x, y);
-                                        if (obj.size > Sphere1.size && obj.size < 10) Sphere1 = obj;
+                                        if (obj.size > Sphere1.size && obj.size < 100) Sphere1 = obj;
                                     }
                                 }
 
                             Object Sphere2 = new Object();
                             lee_matrix = new boolean[imageWidth][imageHeight];
 
-                            for (int y = imageHeight / 5; y < imageHeight; y++)
+                            for (int y = 2 * imageHeight / 3; y < imageHeight; y++)
                                 for (int x = Cube.x; x <imageWidth; x++) {
                                     if (!lee_matrix[x][y] && cube_color[x][y]) {
                                         obj = new Object();
                                         Lee(x, y);
-                                        if (obj.size > Sphere2.size && obj.size < 10) Sphere2 = obj;
+                                        if (obj.size > Sphere2.size && obj.size < 100) Sphere2 = obj;
                                     }
                                 }
                         telemetry.addData("sfera 1" , Sphere1.size);
