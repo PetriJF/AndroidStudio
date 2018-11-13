@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Math.atan;
+import static java.lang.Math.negateExact;
 import static java.lang.Math.toDegrees;
 
 
@@ -42,7 +43,8 @@ public class Autonomie extends LinearOpMode {
     private byte[] pixelArray;
     private VuforiaLocalizer.Parameters params = null;
     private VuforiaTrackables targetsRoverRuckus;
-    private String S = "", nav = "";
+    private double Angle = 0;
+    private String nav = "";
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -52,10 +54,12 @@ public class Autonomie extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        S = MineralsPhase();
-        telemetry.log().add(S);
-
         nav = NavTargets();
+        MoveBack();
+
+        Angle = MineralsPhase();
+        telemetry.addData("Angle", Angle);
+        telemetry.update();
 
         MoveMineral();
         // PlaceMarker();
@@ -95,7 +99,56 @@ public class Autonomie extends LinearOpMode {
 
     }
 
-    public String MineralsPhase() throws InterruptedException
+    public String NavTargets()
+    {
+        targetsRoverRuckus.activate();
+        vuforia.setFrameQueueCapacity(30);
+
+        rotateRobotRight(0.5f);
+        sleep(200);
+        setMotorSpeed(0f);
+        telemetry.addData("heading ", modernRoboticsI2cGyro.getHeading());
+        while (modernRoboticsI2cGyro.getHeading() > 330)
+        {
+            rotateRobotRight(0.15f);
+            telemetry.addData("heading ", modernRoboticsI2cGyro.getHeading());
+        }
+
+        telemetry.update();
+        setMotorSpeed(0f);
+        boolean ok = true;
+        while(ok)
+            for (VuforiaTrackable trackable : targetsRoverRuckus)
+            {
+                OpenGLMatrix pose = ((VuforiaTrackableDefaultListener) trackable.getListener()).getPose();
+
+                if (pose != null)
+                {
+                    if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible())
+                    {
+                        telemetry.addData("Visible Target", trackable.getName());
+                        return trackable.getName();
+                    }
+                }
+            }
+
+        return "NONE";
+    }
+
+    public void MoveBack()
+    {
+        while (modernRoboticsI2cGyro.getHeading() < 360 && modernRoboticsI2cGyro.getHeading() > 10)
+        {
+            rotateRobotLeft(0.15f);
+            telemetry.addData("heading ", modernRoboticsI2cGyro.getHeading());
+        }
+
+        setMotorSpeed(0f);
+        telemetry.addData("heading ", modernRoboticsI2cGyro.getHeading());
+
+    }
+
+    public double MineralsPhase() throws InterruptedException
     {
         vuforia.setFrameQueueCapacity(1);
         Vuforia.setFrameFormat(PIXEL_FORMAT.RGB888, true);
@@ -110,6 +163,7 @@ public class Autonomie extends LinearOpMode {
         double whileStart = runtime.seconds();
         boolean ok = true;
         Object Cube = new Object();
+        double angle = 0;
 
         while(ok) {
             frame = vuforia.getFrameQueue().take(); //takes the frame at the head of the queue
@@ -162,91 +216,42 @@ public class Autonomie extends LinearOpMode {
                             telemetry.addData("Cube Y", Cube.y * scale);
                             telemetry.addData("Cube Size", Cube.size * scale * scale);
                             double tanA = (double)(imageWidth / 2 - Cube.x) / (double)(imageHeight - Cube.y);
-                            double angle = toDegrees(atan(tanA));
-                            telemetry.addData("Angle", angle);
+                            angle = toDegrees(atan(tanA));
+                            return angle;
                         }
 
-                        return Location(Cube.Loc);
+                        return angle;
                     }
                 }
             }
 
         }
-        return "NONE1";
-    }
-
-    public String NavTargets()
-    {
-        targetsRoverRuckus.activate();
-        vuforia.setFrameQueueCapacity(30);
-
-        rotateRobotRight(0.5f);
-        sleep(200);
-        setMotorSpeed(0f);
-        telemetry.addData("heading ", modernRoboticsI2cGyro.getHeading());
-        while (modernRoboticsI2cGyro.getHeading() > 330)
-        {
-            rotateRobotRight(0.15f);
-            telemetry.addData("heading ", modernRoboticsI2cGyro.getHeading());
-        }
-
-        telemetry.update();
-        setMotorSpeed(0f);
-        boolean ok = true;
-        while(ok)
-            for (VuforiaTrackable trackable : targetsRoverRuckus) {
-                OpenGLMatrix pose = ((VuforiaTrackableDefaultListener) trackable.getListener()).getPose();
-
-                if (pose != null) {
-                    if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
-                        telemetry.addData("Visible Target", trackable.getName());
-                        return trackable.getName();
-                    }
-                }
-            }
-
-        return "NONE";
+        return angle;
     }
 
     public void MoveMineral()
     {
-        if (nav == "Front")
-        {
+                if (Angle >= 0)
+                {
+                    while (modernRoboticsI2cGyro.getHeading() < Angle)
+                        rotateRobotLeft(0.15f);
+                }
 
+                else
+                {
+                    while (modernRoboticsI2cGyro.getHeading() < 10)
+                        rotateRobotRight(0.15f);
 
-            if (S == "LEFT")
-            {
-                rotateRobotLeft(0.15f);
-                while (modernRoboticsI2cGyro.getHeading() < 360 && modernRoboticsI2cGyro.getHeading() > 180)
-                    sleep(10);
-                sleep(100);
-                while (modernRoboticsI2cGyro.getHeading() < 20)
-                    sleep(10);
+                    setMotorSpeed(0f);
 
-                setMotorSpeed(0f);
-            }
+                    Angle = (double)360 - (double)Math.abs(Angle);
+                    while (modernRoboticsI2cGyro.getHeading() < Angle)
+                        rotateRobotRight(0.15f);
 
-            else if (S == "CENTER")
-            {
-                rotateRobotLeft(0.15f);
-                while (modernRoboticsI2cGyro.getHeading() < 345 && modernRoboticsI2cGyro.getHeading() > 180)
-                    sleep(10);
-                setMotorSpeed(0f);
-            }
+                }
 
-            else if (S == "RIGHT")
-            {
-                rotateRobotLeft(0.15f);
-                while (modernRoboticsI2cGyro.getHeading() < 335 && modernRoboticsI2cGyro.getHeading() > 180)
-                    sleep(10);
-                setMotorSpeed(0f);
-            }
-
-            moveRobotForward(0.15f);
-            sleep(500);
-
-        }
-
+              moveRobotForward(0.15f);
+              sleep(500);
 
     }
 
