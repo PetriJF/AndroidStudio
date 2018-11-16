@@ -2,6 +2,7 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.HINT;
@@ -45,6 +46,8 @@ public class Autonomie extends LinearOpMode {
     private VuforiaTrackables targetsRoverRuckus;
     private double Angle = 0;
     private String nav = "";
+    private int initRotateTick;
+
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -92,6 +95,7 @@ public class Autonomie extends LinearOpMode {
         motorLeft2 = hardwareMap.dcMotor.get("motorLeft2");
         motorRight1 = hardwareMap.dcMotor.get("motorRight1");
         motorRight2 = hardwareMap.dcMotor.get("motorRight2");
+        initRotateTick = motorRight1.getCurrentPosition();
         telemetry.log().add("Gyro Calibrating. Do Not Move!");
         modernRoboticsI2cGyro.calibrate();
         telemetry.log().add("Gyro Calibrated!");
@@ -104,18 +108,8 @@ public class Autonomie extends LinearOpMode {
         targetsRoverRuckus.activate();
         vuforia.setFrameQueueCapacity(30);
 
-        rotateRobotRight(0.5f);
-        sleep(200);
-        setMotorSpeed(0f);
-        telemetry.addData("heading ", modernRoboticsI2cGyro.getHeading());
-        while (modernRoboticsI2cGyro.getHeading() > 330)
-        {
-            rotateRobotRight(0.15f);
-            telemetry.addData("heading ", modernRoboticsI2cGyro.getHeading());
-        }
-
+        rotate(25);
         telemetry.update();
-        setMotorSpeed(0f);
         boolean ok = true;
         while(ok)
             for (VuforiaTrackable trackable : targetsRoverRuckus)
@@ -137,14 +131,9 @@ public class Autonomie extends LinearOpMode {
 
     public void MoveBack()
     {
-        while (modernRoboticsI2cGyro.getHeading() < 360 && modernRoboticsI2cGyro.getHeading() > 10)
-        {
-            rotateRobotLeft(0.15f);
-            telemetry.addData("heading ", modernRoboticsI2cGyro.getHeading());
-        }
+        rotate(-25);
 
         setMotorSpeed(0f);
-        telemetry.addData("heading ", modernRoboticsI2cGyro.getHeading());
 
     }
 
@@ -215,7 +204,7 @@ public class Autonomie extends LinearOpMode {
                             telemetry.addData("Cube X", Cube.x * scale);
                             telemetry.addData("Cube Y", Cube.y * scale);
                             telemetry.addData("Cube Size", Cube.size * scale * scale);
-                            double tanA = (double)(imageWidth / 2 - Cube.x) / (double)(imageHeight - Cube.y);
+                            double tanA = (double)(Cube.x - imageWidth / 2) / (double)(imageHeight - Cube.y);
                             angle = toDegrees(atan(tanA));
                             return angle;
                         }
@@ -231,28 +220,11 @@ public class Autonomie extends LinearOpMode {
 
     public void MoveMineral()
     {
-                if (Angle >= 0)
-                {
-                    while (modernRoboticsI2cGyro.getHeading() < Angle)
-                        rotateRobotLeft(0.15f);
-                }
-
-                else
-                {
-                    while (modernRoboticsI2cGyro.getHeading() < 10)
-                        rotateRobotRight(0.15f);
-
-                    setMotorSpeed(0f);
-
-                    Angle = (double)360 - (double)Math.abs(Angle);
-                    while (modernRoboticsI2cGyro.getHeading() < Angle)
-                        rotateRobotRight(0.15f);
-
-                }
-
-              moveRobotForward(0.15f);
-              sleep(500);
-
+              rotate(((int)(Angle)));
+              telemetry.addData("Angle", (int)(Angle));
+              telemetry.update();
+              moveRobotForward(0.5f);
+              sleep(1000);
     }
 
     private void PlaceMarker()
@@ -263,7 +235,7 @@ public class Autonomie extends LinearOpMode {
         }
     }
 
-    private void moveRobotForward(float speed) {
+    private void moveRobotReverse(float speed) {
         motorLeft1.setDirection(DcMotor.Direction.FORWARD);
         motorLeft2.setDirection(DcMotor.Direction.FORWARD);
         motorRight1.setDirection(DcMotor.Direction.REVERSE);
@@ -271,7 +243,7 @@ public class Autonomie extends LinearOpMode {
         setMotorSpeed(speed);
     }
 
-    private void moveRobotReverse(float speed) {
+    private void moveRobotForward(float speed) {
         motorLeft1.setDirection(DcMotor.Direction.REVERSE);
         motorLeft2.setDirection(DcMotor.Direction.REVERSE);
         motorRight1.setDirection(DcMotor.Direction.FORWARD);
@@ -418,5 +390,41 @@ public class Autonomie extends LinearOpMode {
 
         return "?";
     }
+
+    public void rotate(int degrees)
+    {
+
+        int ticks = toTicks(degrees);
+
+        motorLeft1.setDirection(DcMotor.Direction.FORWARD);
+        motorLeft2.setDirection(DcMotor.Direction.FORWARD);
+        motorRight1.setDirection(DcMotor.Direction.FORWARD);
+        motorRight2.setDirection(DcMotor.Direction.FORWARD);
+        motorRight1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        setMotorSpeed(ticks > 0 ? 0.4f : -0.4f);
+
+        int startPos = Math.abs(motorRight1.getCurrentPosition());
+        while (Math.abs(motorRight1.getCurrentPosition()) < Math.abs(ticks) + startPos)
+        {
+            telemetry.addData("Ticks", motorRight1.getCurrentPosition());
+            telemetry.addData("Goal", ticks);
+            telemetry.update();
+        }
+
+        setMotorSpeed(0f);
+        motorRight1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        sleep(350);
+
+    }
+
+
+    public int toTicks(int degrees)
+    {
+        int maxTick = degrees >= 0 ? 2800 : 1700;
+        return maxTick * degrees / 360;
+    }
+
 }
 
