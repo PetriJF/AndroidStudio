@@ -20,7 +20,6 @@ public class RotatieAutonomie extends LinearOpMode {
 
         robot.rotate(360);
         robot.rotate(-360);
-
     }
 
     public void Init()
@@ -50,17 +49,21 @@ public class RotatieAutonomie extends LinearOpMode {
             motorLeft2.setDirection(DcMotor.Direction.FORWARD);
             motorRight1.setDirection(DcMotor.Direction.FORWARD);
             motorRight2.setDirection(DcMotor.Direction.FORWARD);
+            motorRight1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             setMotorSpeed(ticks > 0 ? 0.4f : -0.4f);
 
             int startPos = Math.abs(motorRight1.getCurrentPosition());
-            while (ticks > 0 ? (Math.abs(motorRight1.getCurrentPosition()) < ticks + startPos) : (Math.abs(motorRight1.getCurrentPosition()) > startPos - Math.abs(ticks)))
+            while (Math.abs(motorRight1.getCurrentPosition()) < Math.abs(ticks) + startPos)
             {
-                telemetry.addData("Ticks", Math.abs(motorRight1.getCurrentPosition()));
+                telemetry.addData("Ticks", motorRight1.getCurrentPosition());
                 telemetry.addData("Goal", ticks);
                 telemetry.update();
             }
 
             setMotorSpeed(0f);
+            motorRight1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motorRight1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             sleep(350);
 
         }
@@ -69,9 +72,8 @@ public class RotatieAutonomie extends LinearOpMode {
 
     public int toTicks(int degrees)
     {
-            int maxTick = degrees >= 0 ? 3050 : 1700;
+            int maxTick = degrees >= 0 ? 2800 : 1700;
             return maxTick * degrees / 360;
-
     }
 
     private void setMotorSpeed(float speed)
