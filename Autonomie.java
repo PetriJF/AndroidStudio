@@ -220,8 +220,8 @@ public class Autonomie extends LinearOpMode {
 
     public void MoveMineral()
     {
-              rotate(((int)(Angle)));
-              telemetry.addData("Angle", (int)(Angle));
+              rotate(((int)(Angle) / 2));
+              telemetry.addData("Angle", (int)(Angle) / 2);
               telemetry.update();
               moveRobotForward(0.5f);
               sleep(1000);
